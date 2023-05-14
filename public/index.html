@@ -58,7 +58,8 @@
       const buzzer = document.getElementById('buzzer');
 
       function initializeWebSocketConnection(name) {
-        const ws = new WebSocket(`ws://${window.location.host}/ws?name=${name}`);
+        const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
+        const ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=${name}`);
 
         ws.onopen = () => {
           console.info(`Connected ${name} to server.`);
