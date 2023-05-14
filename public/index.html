@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1 viewport-fit=cover">
+    <title>Buzzer</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="img/favicon/site.webmanifest">
+
+    <style>
+      * {
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Helvetica, Arial, sans-serif;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        display: grid;
+        grid-template-rows: 1fr;
+        height: 100vh;
+        max-height: -webkit-fill-available;
+        background-color: #0A1929;
+        color: white;
+      }
+
+      main {
+        overflow-y: auto;
+      }
+
+      main > button {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 7px 10px;
+        border-radius: 5px;
+        font-size: 4rem;
+
+        height: 100%;
+        width: 100%;
+      }
+
+      main > button > img {
+        width: 75%;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <button id="buzzer">
+        <img src="img/stop.svg" alt="Stop" />
+      </button>
+    </main>
+    <script>
+      const buzzer = document.getElementById('buzzer');
+
+      function initializeWebSocketConnection(name) {
+        const ws = new WebSocket(`ws://${window.location.host}/ws?name=${name}`);
+
+        ws.onopen = () => {
+          console.info(`Connected ${name} to server.`);
+
+          document.getElementById('buzzer').addEventListener('click', () => {
+            const d = new Date();
+            ws.send(`${name} @ ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}:${d.getMilliseconds()}`);
+          });
+        };
+
+        ws.onclose = () => console.info(`Disconnected "${name}" from server.`);
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+
+      if (urlParams.get('name')) {
+        initializeWebSocketConnection(urlParams.get('name'));
+      }
+    </script>
+  </body>
+</html>
