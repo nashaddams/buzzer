@@ -43,6 +43,10 @@
         width: 100%;
       }
 
+      main > button:active {
+        background-color: rgba(255, 255, 255, .1);
+      }
+
       main > button > img {
         width: 75%;
       }
@@ -54,29 +58,26 @@
         <img src="img/stop.svg" alt="Stop" />
       </button>
     </main>
-    <script>
-      const buzzer = document.getElementById('buzzer');
 
-      function initializeWebSocketConnection(name) {
+    <script>
+      const name = new URLSearchParams(window.location.search).get('name');
+
+      if (name) {
         const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
         const ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=${name}`);
 
         ws.onopen = () => {
           console.info(`Connected ${name} to server.`);
 
-          document.getElementById('buzzer').addEventListener('click', () => {
-            const d = new Date();
-            ws.send(`${name} @ ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}:${d.getMilliseconds()}`);
+          document.getElementById('buzzer').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (ws.OPEN) {
+              ws.send(JSON.stringify({ name, timeStamp: new Date() }));
+            }
           });
         };
 
         ws.onclose = () => console.info(`Disconnected "${name}" from server.`);
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-
-      if (urlParams.get('name')) {
-        initializeWebSocketConnection(urlParams.get('name'));
       }
     </script>
   </body>
