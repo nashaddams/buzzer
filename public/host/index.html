@@ -92,40 +92,50 @@
       const padStart = (number) => String(number).padStart(2, "0");
       const padEnd = (number) => String(number).padEnd(3, "0");
 
-      const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
-      const ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=host`);
+      function initializeWebsocket() {
+        const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
+        let ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=host`);
 
-      ws.onopen = () => {
-        console.info(`Connected "host" to server.`);
-      };
+        ws.onopen = () => {
+          console.info(`Connected "host" to server.`);
+        };
 
-      ws.onmessage = (e) => {
-        try {
-          const { name, timeStamp } = JSON.parse(e.data);
-          const date = new Date(timeStamp);
-          const hours = padStart(date.getHours());
-          const minutes = padStart(date.getMinutes());
-          const seconds = padStart(date.getSeconds());
-          const milliseconds = padEnd(date.getMilliseconds());
+        ws.onmessage = (e) => {
+          try {
+            const { name, timeStamp } = JSON.parse(e.data);
+            const date = new Date(timeStamp);
+            const hours = padStart(date.getHours());
+            const minutes = padStart(date.getMinutes());
+            const seconds = padStart(date.getSeconds());
+            const milliseconds = padEnd(date.getMilliseconds());
 
-          const messageFragment = document.createDocumentFragment();
+            const messageFragment = document.createDocumentFragment();
 
-          const nameElement = document.createElement('div');
-          nameElement.textContent = name;
+            const nameElement = document.createElement('div');
+            nameElement.textContent = name;
 
-          const timeElement = document.createElement('div');
-          timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+            const timeElement = document.createElement('div');
+            timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
 
-          messageFragment.appendChild(nameElement);
-          messageFragment.appendChild(timeElement);
+            messageFragment.appendChild(nameElement);
+            messageFragment.appendChild(timeElement);
 
-          document.getElementById('messages').appendChild(messageFragment);
-        } catch (e) {
-          console.warn('Unable to parse message', e);
-        }
-      };
+            document.getElementById('messages').appendChild(messageFragment);
+          } catch (e) {
+            console.warn('Unable to parse message', e);
+          }
+        };
 
-      ws.onclose = () => console.info('Disconnected "host" from server.');
+        ws.onclose = () => {
+          console.info('Disconnected "host" from server. Reconnecting in 3 seconds...');
+          ws = null;
+          setTimeout(() => {
+            initializeWebsocket();
+          }, 3000);
+        };
+      }
+
+      initializeWebsocket();
     </script>
   </body>
 </html>
