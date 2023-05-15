@@ -38,17 +38,13 @@
       main > .content > #messages {
         display: grid;
         grid-template-columns: 1fr auto;
-        font-size: 1.3rem;
+        grid-gap: 10px;
       }
 
-      main > .content > #messages > .name {
-        line-height: 1.8rem;
-      }
-
-      main > .content > #messages > .time {
+      main > .content > #messages > * {
         font-family: 'Courier New', Courier, monospace;
+        font-size: 1.4rem;
         font-weight: 600;
-        line-height: 2rem;
       }
 
       footer {
@@ -115,11 +111,9 @@
           const messageFragment = document.createDocumentFragment();
 
           const nameElement = document.createElement('div');
-          nameElement.className = 'name';
           nameElement.textContent = name;
 
           const timeElement = document.createElement('div');
-          timeElement.className = 'time';
           timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
 
           messageFragment.appendChild(nameElement);
