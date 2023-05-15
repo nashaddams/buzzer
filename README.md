@@ -10,9 +10,9 @@ deno run --allow-net --allow-read main.ts
 
 ## Usage
 
-**Host**: Access [`http://localhost/host`](http://localhost/host) and wait for clients to buzz.
+**Host**: Access `http(s)://<HOST>/host` and wait for clients to buzz.
 
-**Client**: Access [`http://localhost?name=<YOUR_NAME>`](http://localhost?name=) with your name and start buzzing.
+**Client**: Access `http(s)://<HOST>/?name=<YOUR_NAME>` with your name and start buzzing.
 
 ## Thanks to
 
