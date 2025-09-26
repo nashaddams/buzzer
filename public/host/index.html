@@ -47,7 +47,8 @@
       </div>
     </main>
     <script>
-      const ws = new WebSocket(`ws://${window.location.host}/ws?name=host`);
+      const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
+      const ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=host`);
 
       ws.onopen = () => {
         console.info(`Connected "host" to server.`);
