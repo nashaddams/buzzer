@@ -36,7 +36,6 @@
         color: white;
         cursor: pointer;
         padding: 7px 10px;
-        border-radius: 5px;
         font-size: 4rem;
 
         height: 100%;
@@ -60,34 +59,17 @@
     </main>
 
     <script>
-      function initializeWebsocket(name) {
-        const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
-        let ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=${name}`);
-
-        ws.onopen = () => {
-          console.info(`Connected ${name} to server.`);
-
-          document.getElementById('buzzer').addEventListener('click', (e) => {
-            e.preventDefault();
-            if (ws.OPEN) {
-              ws.send(JSON.stringify({ name, timeStamp: new Date() }));
-            }
-          });
-        };
-
-        ws.onclose = () => {
-          console.info(`Disconnected "${name}" from server. Reconnecting in 3 seconds...`);
-          ws = null;
-          setTimeout(() => {
-            initializeWebsocket(name);
-          }, 3000);
-        };
-      }
-
       const name = new URLSearchParams(window.location.search).get('name');
 
       if (name) {
-        initializeWebsocket(name);
+        document.getElementById('buzzer').addEventListener('click', (e) => {
+          e.preventDefault();
+          fetch(`${location.origin}/buzz`, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, timeStamp: new Date() }),
+          });
+        });
       }
     </script>
   </body>

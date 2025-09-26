@@ -5,7 +5,7 @@ This is a little web app to track who buzzed first.
 ## Run Server
 
 ```
-deno run --allow-net --allow-read main.ts
+deno run --unstable --allow-net --allow-read main.ts
 ```
 
 ## Usage
@@ -16,7 +16,7 @@ deno run --allow-net --allow-read main.ts
 
 ## Thanks to
 
-* [RedKetchup Favicon Generator](https://redketchup.io/favicon-generator)
+- [RedKetchup Favicon Generator](https://redketchup.io/favicon-generator)
 
 ## LICENSE
 

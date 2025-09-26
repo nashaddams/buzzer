@@ -1,44 +1,50 @@
-import { Application, Router, send } from "https://deno.land/x/oak@v12.4.0/mod.ts";
+import {
+  Application,
+  Router,
+  send,
+} from "https://deno.land/x/oak@v12.4.0/mod.ts";
 
 const app = new Application();
 const router = new Router();
-const wsConnections: Map<string, WebSocket> = new Map();
+const kv = await Deno.openKv();
+const MESSAGE_COUNT_LIMIT = 1000;
 
 router
-  .get("/ws", (ctx) => {
-    if (!ctx.isUpgradable) {
-      ctx.throw(501);
+  .get("/messages", async (ctx) => {
+    const messages = [];
+    for await (const entry of kv.list({ prefix: ["message"] })) {
+      messages.push(entry.value);
+    }
+    ctx.response.headers.set("Content-Type", "application/json");
+    ctx.response.body = messages;
+    ctx.response.status = 200;
+  })
+  .post("/buzz", async (ctx) => {
+    // Limit message count
+    let messageCount = 0;
+    for await (const _ of kv.list({ prefix: ["message"] })) {
+      messageCount++;
+      if (messageCount > MESSAGE_COUNT_LIMIT) {
+        ctx.response.status = 429;
+        return;
+      }
     }
 
-    const clientName = ctx.request.url.searchParams.get('name');
+    const { name, timeStamp } = await ctx.request.body().value;
 
-    if (clientName) {
-      const ws = ctx.upgrade();
-
-      ws.onopen = (e) => {
-        console.info(
-          `Connected to "${clientName}" (${new Date(e.timeStamp).toLocaleTimeString()})`
-        );
-      };
-
-      ws.onmessage = (e) => {
-        const recipients: string[] = [];
-
-        // Relay incoming messages to all websocket connections
-        for (const [name, ws] of wsConnections) {
-          if (ws.OPEN) {
-            recipients.push(name);
-            ws.send(e.data as string);
-          }
-        }
-
-        console.info(`Sent message to ${recipients.map((r) => `"${r}"`).join(', ')}.`);
-      };
-
-      ws.onclose = () => console.info(`Disconncted from "${clientName}".`);
-
-      wsConnections.set(clientName, ws);
+    if (name && timeStamp) {
+      await kv.set(["message", timeStamp], { name, timeStamp });
+      console.info(`Saved message from "${name}" (${timeStamp})`);
+      ctx.response.status = 204;
+    } else {
+      ctx.response.status = 400;
     }
+  })
+  .delete("/clear", async (ctx) => {
+    for await (const entry of kv.list({ prefix: ["message"] })) {
+      await kv.delete(entry.key);
+    }
+    ctx.response.status = 204;
   });
 
 app.use(router.routes());
@@ -51,6 +57,5 @@ app.use(async (ctx) => {
     index: "index.html",
   });
 });
-
 
 app.listen({ port: 80 });

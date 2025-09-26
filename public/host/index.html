@@ -48,6 +48,8 @@
       }
 
       footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         padding-bottom: env(safe-area-inset-bottom);
       }
 
@@ -58,7 +60,6 @@
         border: none;
         cursor: pointer;
         padding: 26px 22px 20px 22px;
-        border-radius: 5px;
       }
 
       footer > button:active {
@@ -81,28 +82,25 @@
       <button id="delete" ontouchstart>
         <img src="../img/delete.svg" alt="Delete" />
       </button>
+      <button id="refresh" ontouchstart>
+        <img src="../img/refresh.svg" alt="Refresh" />
+      </button>
     </footer>
 
     <script>
-      document.getElementById('delete').addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('messages').replaceChildren();
-      });
-
       const padStart = (number) => String(number).padStart(2, "0");
       const padEnd = (number) => String(number).padEnd(3, "0");
 
-      function initializeWebsocket() {
-        const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
-        let ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=host`);
+      async function refreshMessages() {
+        document.getElementById('messages').replaceChildren();
 
-        ws.onopen = () => {
-          console.info(`Connected "host" to server.`);
-        };
+        try {
+          const res = await fetch(`${location.origin}/messages`);
+          const messages = await res.json();
+          const messagesFragment = document.createDocumentFragment();
 
-        ws.onmessage = (e) => {
-          try {
-            const { name, timeStamp } = JSON.parse(e.data);
+          for (const message of messages) {
+            const { name, timeStamp } = message;
             const date = new Date(timeStamp);
             const hours = padStart(date.getHours());
             const minutes = padStart(date.getMinutes());
@@ -113,29 +111,34 @@
 
             const nameElement = document.createElement('div');
             nameElement.textContent = name;
-
             const timeElement = document.createElement('div');
             timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
 
             messageFragment.appendChild(nameElement);
             messageFragment.appendChild(timeElement);
-
-            document.getElementById('messages').appendChild(messageFragment);
-          } catch (e) {
-            console.warn('Unable to parse message', e);
+            messagesFragment.appendChild(messageFragment);
           }
-        };
 
-        ws.onclose = () => {
-          console.info('Disconnected "host" from server. Reconnecting in 3 seconds...');
-          ws = null;
-          setTimeout(() => {
-            initializeWebsocket();
-          }, 3000);
-        };
+          document.getElementById('messages').appendChild(messagesFragment);
+        } catch (err) {
+          console.warn('Unable to refresh messages.', err);
+        }
       }
 
-      initializeWebsocket();
+      document.getElementById('refresh').addEventListener('click', async (e) => {
+        e.preventDefault();
+        refreshMessages();
+      });
+
+      document.getElementById('delete').addEventListener('click', async (e) => {
+        e.preventDefault();
+        const { status } = await fetch(`${location.origin}/clear`, { method: 'DELETE' });
+        if (status === 204) {
+          document.getElementById('messages').replaceChildren();
+        }
+      });
+
+      refreshMessages();
     </script>
   </body>
 </html>
