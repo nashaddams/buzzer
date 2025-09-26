@@ -19,7 +19,7 @@
 
       body {
         display: grid;
-        grid-template-rows: 1fr;
+        grid-template-rows: 1fr auto;
         height: 100vh;
         max-height: -webkit-fill-available;
         background-color: #0A1929;
@@ -35,8 +35,43 @@
         position: relative;
       }
 
-      main > .content .message {
-        font-size: 2rem;
+      main > .content > #messages {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        font-size: 1.3rem;
+      }
+
+      main > .content > #messages > .name {
+        line-height: 1.8rem;
+      }
+
+      main > .content > #messages > .time {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: 600;
+        line-height: 2rem;
+      }
+
+      footer {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      footer > button {
+        display: block;
+        width: 100%;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 26px 22px 20px 22px;
+        border-radius: 5px;
+      }
+
+      footer > button:active {
+        background-color: rgba(255, 255, 255, .1);
+      }
+
+      footer > button > img {
+        height: 96px;
+        width: 96px;
       }
     </style>
   </head>
@@ -46,7 +81,21 @@
         <div id="messages"></div>
       </div>
     </main>
+    <footer>
+      <button id="delete">
+        <img src="../img/delete.svg" alt="Delete" />
+      </button>
+    </footer>
+
     <script>
+      document.getElementById('delete').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('messages').replaceChildren();
+      });
+
+      const padStart = (number) => String(number).padStart(2, "0");
+      const padEnd = (number) => String(number).padEnd(3, "0");
+
       const wsProtocol = location.protocol.includes('https') ? 'wss' : 'ws';
       const ws = new WebSocket(`${wsProtocol}://${location.host}/ws?name=host`);
 
@@ -55,10 +104,31 @@
       };
 
       ws.onmessage = (e) => {
-        const messageElement = document.createElement('div');
-        messageElement.textContent = e.data;
-        messageElement.className = 'message';
-        document.getElementById('messages').appendChild(messageElement);
+        try {
+          const { name, timeStamp } = JSON.parse(e.data);
+          const date = new Date(timeStamp);
+          const hours = padStart(date.getHours());
+          const minutes = padStart(date.getMinutes());
+          const seconds = padStart(date.getSeconds());
+          const milliseconds = padEnd(date.getMilliseconds());
+
+          const messageFragment = document.createDocumentFragment();
+
+          const nameElement = document.createElement('div');
+          nameElement.className = 'name';
+          nameElement.textContent = name;
+
+          const timeElement = document.createElement('div');
+          timeElement.className = 'time';
+          timeElement.textContent = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+
+          messageFragment.appendChild(nameElement);
+          messageFragment.appendChild(timeElement);
+
+          document.getElementById('messages').appendChild(messageFragment);
+        } catch (e) {
+          console.warn('Unable to parse message', e);
+        }
       };
 
       ws.onclose = () => console.info('Disconnected "host" from server.');
