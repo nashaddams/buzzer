@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1 viewport-fit=cover">
+    <title>Buzzer Host</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="../img/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="../img/favicon/site.webmanifest">
+
+    <style>
+      * {
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, Helvetica, Arial, sans-serif;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        display: grid;
+        grid-template-rows: 1fr;
+        height: 100vh;
+        max-height: -webkit-fill-available;
+        background-color: #0A1929;
+        color: white;
+      }
+
+      main {
+        overflow-y: auto;
+      }
+
+      main > .content {
+        padding: 20px;
+        position: relative;
+      }
+
+      main > .content .message {
+        font-size: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="content">
+        <div id="messages"></div>
+      </div>
+    </main>
+    <script>
+      const ws = new WebSocket(`ws://${window.location.host}/ws?name=host`);
+
+      ws.onopen = () => {
+        console.info(`Connected "host" to server.`);
+      };
+
+      ws.onmessage = (e) => {
+        const messageElement = document.createElement('div');
+        messageElement.textContent = e.data;
+        messageElement.className = 'message';
+        document.getElementById('messages').appendChild(messageElement);
+      };
+
+      ws.onclose = () => console.info('Disconnected "host" from server.');
+    </script>
+  </body>
+</html>
